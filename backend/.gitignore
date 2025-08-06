@@ -1,0 +1,11 @@
+# Virtual environment
+facebook_clone_venv/
+
+# Python Bytecode
+__pycache__/
+*.py[cod]
+
+# Environment Variables
+.env
+
+.vscode/
