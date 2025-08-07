@@ -14,13 +14,14 @@ class User(AbstractUser):
         upload_to='profile_pics/',
         null=True,
         blank=True,
-        default='profile_pics/default.jpg'
+        default='profile_pics/default.jpg',
+        help_text='Upload a profile picture',
     )
     cover_photo = models.ImageField(
-        upload_to='cover_photo/',
+        upload_to='cover_photos/',
         null=True,
         blank=True,
-        default='cover_photo/default.jpg'
+        default='cover_photos/default.jpg'
     )
 
     # Personal Information
@@ -50,9 +51,9 @@ class User(AbstractUser):
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    # Extra details
+    # Extra Details
     def __str__(self):
         return f"{self.username} ({self.first_name} {self.last_name})"
 
@@ -60,9 +61,10 @@ class User(AbstractUser):
     def full_name(self):
         return f"({self.first_name} {self.last_name})".strip()
 
-    @property
-    def mutual_friends_count(self):
-        pass
-
-
-    
+    class Meta:
+        db_table = 'users'
+        indexes = [
+            models.Index(fields=['username']),
+            models.Index(fields=['email']),
+            models.Index(fields=['is_online']),
+        ]

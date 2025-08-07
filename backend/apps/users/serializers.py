@@ -1,63 +1,82 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from users.models import User
 
-User = get_user_model()
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer for user registration"""
+    password = serializers.CharField(
+        write_only=True,
+        validators=[validate_password],
+    )
+    password_confirm = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'username', 'email', 'first_name', 'last_name',
+            'password', 'password_confirm',
+        ]
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError("Passwords Don't Match")
+        return attrs
+    
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = User.objects.create_user(**validated_data)
+        return user
+    
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """ 
-    Serializer for user profiles
-    """
+    """Serializer for user profile"""
     full_name = serializers.ReadOnlyField()
-    friends_count = serializers.SerializerMethodField()
-    mutual_friends_count = serializers.SerializerMethodField()
-    friendship_status = serializers.SerializerMethodField()
-
-
+    
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 'full_name',
             'bio', 'profile_picture', 'cover_photo', 'date_of_birth',
-            'location', 'work', 'education', 'website',
-            'friends_count', 'mutual_friends_count', 'friendship_status',
-            'is_verified', 'is_online', 'last_seen', 'created_at'
+            'location', 'work', 'education', 'website', 'phone_number',
+            'profile_visibility', 'is_verified', 'is_online', 'last_seen',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'username', 'is_verified', 'created_at']
-        
-        def get_friends_count(self, obj):
-            return Friendship.get_friends(obj).count()
 
-        def get_mutual_friends_count(self, obj):
-            request = self.context.get('request')
-            if request and request.user.is_authenticated and request.user != obj:
-                return len(Friendship.get_mutual_friends(request.user, obj))
-            return 0
+        read_only_fields = [
+            'id', 'username', 'is_verified', 'is_online',
+            'last_seen', 'created_at', 'updated_at'
+        ]
 
-        def get_friendship_status(self, obj):
-            request = self.context.get('request')
-            if request and request.user.is_authenticated and request.user != obj:
-                try:
-                    friendship = Friendship.objects.get(
-                        models.Q(requester=request.user, addressee=obj) |
-                        models.Q(requester=obj, addressee=request.user)
-                    )
-                    return {
-                        'status': friendship.status,
-                        'requester': friendship.requester.username,
-                        'created_at': friendship.created_at
-                    }
-                except Friendship.DoesNotExist:
-                    return None
-            return None
 
-class UserSearchSerializer(serializers.ModelSerializer):
-    """Lighter serializer for user search results"""
-    
+class UserListSerializer(serializers.ModelSerializer):
+    """Serializer for user list"""
     full_name = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = User
         fields = [
             'id', 'username', 'full_name', 'profile_picture',
-            'location', 'is_verified'
+            'is_verified', 'location'
         ]
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if not user:
+                raise serializers.ValidationError('Invalid Credentials')
+            if not user.is_active:
+                raise serializers.ValidationError('Account is disabled')
+            attrs['user'] = user
+        else:
+            raise serializers.ValidationError('Must include username and password')
+        
+        return attrs
