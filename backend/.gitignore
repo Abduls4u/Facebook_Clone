@@ -9,3 +9,6 @@ __pycache__/
 .env
 
 .vscode/
+
+apps/*/migrations/*.py
+db.sqlite3
