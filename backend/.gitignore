@@ -12,3 +12,4 @@ __pycache__/
 
 apps/*/migrations/*.py
 db.sqlite3
+media/*
