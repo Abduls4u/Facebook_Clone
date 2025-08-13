@@ -76,7 +76,7 @@ class UserListView(generics.ListAPIView):
     """List all users (for testing purposes only)"""
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserListSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 @api_view(['POST'])
