@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Post, PostMedia, PostTag
 from apps.users.serializers import UserListSerializer
+from apps.likes.models import Like
+from django.contrib.contenttypes.models import ContentType
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
@@ -23,14 +25,47 @@ class PostSerializer(serializers.ModelSerializer):
     media = PostMediaSerializer(many=True, read_only=True)
     tags = PostTagSerializer(many=True, read_only=True)
 
+    # Add like status fields
+    user_has_liked = serializers.SerializerMethodField()
+    user_reaction = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
         fields = [
             'id', 'author', 'content', 'post_type', 'privacy',
             'location', 'media', 'tags', 'likes_count', 
-            'comments_count', 'created_at', 'updated_at'
+            'comments_count', 'user_has_liked', 'user_reaction' 
+            'created_at', 'updated_at'
         ]
 
+    def get_user_has_liked(self,obj):
+        """Check if current user has liked this post"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            content_type = ContentType.objects.get_for_model(Post)
+            return Like.objects.filter(
+                user=request.user,
+                content_type=content_type,
+                object_id=obj.id
+            ).exists()
+        return False
+    
+    def get_user_reaction(self, obj):
+        """Get current user's reaction to this post"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            content_type = ContentType.objects.get_for_model(Post)
+            try:
+                like = like.objects.get(
+                    user=request.user,
+                    content_type=content_type,
+                    object_id=obj.id
+                )
+                return like.reaction_type
+            except Like.DoesNotExist:
+                return None
+        return None
+        
 
 class CreatePostSerializer(serializers.ModelSerializer):
     """Serializer for creating posts"""
