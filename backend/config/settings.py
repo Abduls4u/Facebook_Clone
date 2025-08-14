@@ -31,6 +31,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(','
 LOCAL_APPS = [
     'apps.users',
     'apps.posts',
+    'apps.likes',
 ]
 
 THIRD_PARTY_APPS = [
