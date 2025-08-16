@@ -24,6 +24,8 @@ urlpatterns = [
     path('api/auth/', include('apps.users.urls', namespace='users')),
     path('api/', include('apps.posts.urls', namespace='posts')),
     path('api/', include('apps.likes.urls', namespace='likes')),
+    path('api/', include('apps.comments.urls', namespace='comments')),
+    path('api/', include('apps.friendships.urls', namespace='friendships')),
 ]
 
 # Serve media files in development

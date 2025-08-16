@@ -32,6 +32,8 @@ LOCAL_APPS = [
     'apps.users',
     'apps.posts',
     'apps.likes',
+    'apps.comments',
+    'apps.friendships',
 ]
 
 THIRD_PARTY_APPS = [
