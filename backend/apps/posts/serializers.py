@@ -3,6 +3,7 @@ from .models import Post, PostMedia, PostTag
 from apps.users.serializers import UserListSerializer
 from apps.likes.models import Like
 from django.contrib.contenttypes.models import ContentType
+from apps.comments.models import Comment
 
 
 class PostMediaSerializer(serializers.ModelSerializer):
@@ -29,14 +30,24 @@ class PostSerializer(serializers.ModelSerializer):
     user_has_liked = serializers.SerializerMethodField()
     user_reaction = serializers.SerializerMethodField()
 
+    # Add recent comments (first 3)
+    recent_comments = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
         fields = [
             'id', 'author', 'content', 'post_type', 'privacy',
             'location', 'media', 'tags', 'likes_count', 
             'comments_count', 'user_has_liked', 'user_reaction' 
-            'created_at', 'updated_at'
+            'recent_comments','created_at', 'updated_at'
         ]
+
+
+    def get_recent_comments(self, obj):
+        """Get first 3 comments"""
+        from apps.comments.serializers import CommentSerializer
+        recent = obj.comments.filter(is_deleted=False)[:3]
+        return CommentSerializer(recent, many=True, context=self.context).data
 
     def get_user_has_liked(self,obj):
         """Check if current user has liked this post"""
