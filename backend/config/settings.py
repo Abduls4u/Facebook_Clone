@@ -34,6 +34,7 @@ LOCAL_APPS = [
     'apps.likes',
     'apps.comments',
     'apps.friendships',
+    'apps.notifications'
 ]
 
 THIRD_PARTY_APPS = [
